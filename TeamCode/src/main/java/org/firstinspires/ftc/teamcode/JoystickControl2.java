@@ -4,6 +4,7 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -21,12 +22,14 @@ import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import java.util.concurrent.TimeUnit;
 
 @Config
-@TeleOp(name="Joystick Control", group="Linear Opmode")
-//@Disabled
-public class JoystickControl extends LinearOpMode {
+@TeleOp(name="Joystick Control2", group="Linear Opmode")
+@Disabled
+public class JoystickControl2 extends LinearOpMode {
 
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
+
+    public ElapsedTime counterTime = new ElapsedTime();
 
     // Arm and Extension and carousel
     private DcMotorEx arm, extension, carousel, turret;
@@ -37,6 +40,9 @@ public class JoystickControl extends LinearOpMode {
     public static PIDFCoefficients turret_pid = new PIDFCoefficients(10,0,0,10);
 
     public static boolean pidOn = true;
+
+    public double prev_x = 0;
+    public double prev_y = 0;
 
     public static double factor = 0.8;
 
@@ -175,13 +181,38 @@ public class JoystickControl extends LinearOpMode {
 
         while(opModeIsActive())
         {
+//            drive.setMotorPowers(0.5,0.5,0.5,0.5);
             drive.setWeightedDrivePower(
                     new Pose2d(
-                            -gamepad1.left_stick_y,
-                            -gamepad1.left_stick_x,
-                            -gamepad1.right_stick_x
+                            -gamepad1.left_stick_y*factor,
+                            -gamepad1.left_stick_x*factor,
+                            -gamepad1.right_stick_x*factor
                     )
             );
+
+//            if(counterTime.time() > 2 && (gamepad1.left_stick_x > 0 || gamepad1.right_stick_y > 0))
+//            {
+//                prev_y = gamepad1.left_stick_y;
+//                prev_x = gamepad1.left_stick_x;
+//            }
+//            else if(counterTime.now(TimeUnit.SECONDS) > 0)
+//            {
+//                counterTime.reset();
+//                counterTime.startTime();
+//            }
+//
+//            telemetry.addData("counter time",counterTime.now(TimeUnit.SECONDS));
+//            telemetry.addData("counter time 2",counterTime.time(TimeUnit.SECONDS));
+
+//            drive.setWeightedDrivePower(
+//                    new Pose2d(
+//                            -((prev_y*factor) + ((1-factor)*gamepad1.left_stick_y)),
+//                            -((prev_x*factor) + ((1-factor)*gamepad1.left_stick_x)),
+//                            -gamepad1.right_stick_x
+//                    )
+//            );
+            prev_y = gamepad1.left_stick_y;
+            prev_x = gamepad1.left_stick_x;
             drive.update();
 
             //arm
@@ -329,6 +360,7 @@ public class JoystickControl extends LinearOpMode {
             telemetry.addData("turret position",turret.getCurrentPosition());
             telemetry.addData("left_stick", -gamepad1.left_stick_y);
             telemetry.addData("right_stick",-gamepad1.right_stick_x);
+
             telemetry.update();
         }
         if (isStopRequested())  return;

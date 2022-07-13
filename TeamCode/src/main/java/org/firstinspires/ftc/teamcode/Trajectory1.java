@@ -81,14 +81,16 @@ public class Trajectory1 extends LinearOpMode {
         turret.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
         turret.setPower(1);
 
-        int startOffset = 12;
+        int startOffset = 8;
 
         //setting drive initial pose
-        Pose2d start = new Pose2d(23+startOffset,-66,Math.toRadians(0));
+        Pose2d start = new Pose2d(24+startOffset,-66,Math.toRadians(0));
+        Pose2d shippingHub = new Pose2d(-16,-36-8,Math.toRadians(0));
+
         drive.setPoseEstimate(start);
 
         //move arm to uppmost position
-        TrajectorySequence PickToTop = drive.trajectorySequenceBuilder(drive.getPoseEstimate())
+        TrajectorySequence PickToTop = drive.trajectorySequenceBuilder(start)
                 .addTemporalMarker(() -> {
                     servo1.setPosition(ArmConstants.dropper_mid);
                 }).waitSeconds(0.5)
@@ -98,22 +100,8 @@ public class Trajectory1 extends LinearOpMode {
                 })
                 .build();
 
-        //traverseal (warehouse -> red shipping hub)
-        TrajectorySequence BackTraverse = drive.trajectorySequenceBuilder(start)
-                .back(startOffset)
-                .splineTo(new Vector2d(-12,-36-8),Math.toRadians(180))
-                .build();
-
-        //traversal (red alliance shipping hub -> warehouse)
-        TrajectorySequence ForwardTraverse = drive.trajectorySequenceBuilder(drive.getPoseEstimate())
-                .strafeRight(0.1)
-                .splineToConstantHeading(new Vector2d(23,-66),Math.toRadians(0))
-                .forward(startOffset)
-                .build();
-
-
         //ball drop
-        TrajectorySequence DropBall = drive.trajectorySequenceBuilder(drive.getPoseEstimate())
+        TrajectorySequence DropBall = drive.trajectorySequenceBuilder(shippingHub)
                 .addTemporalMarker(()->{
                     turret.setTargetPosition(-200);
                 }).waitSeconds(1)
@@ -135,7 +123,7 @@ public class Trajectory1 extends LinearOpMode {
                 .build();
 
         //pickup ball
-        TrajectorySequence pickBall = drive.trajectorySequenceBuilder(drive.getPoseEstimate())
+        TrajectorySequence pickBall = drive.trajectorySequenceBuilder(start)
                 .addTemporalMarker(()->{
                     servo1.setPosition(ArmConstants.dropper_toPick);
                 }).waitSeconds(0.5)
@@ -159,21 +147,47 @@ public class Trajectory1 extends LinearOpMode {
                 .addTemporalMarker(()->{
                     servo1.setPosition(ArmConstants.dropper_mid);
                 })
+                .build();
+
+//        Pose2d start = new Pose2d(24+startOffset,-66,Math.toRadians(0));
+//        Pose2d shippingHub = new Pose2d(-16,-36-8,Math.toRadians(0));
+
+//       ####################     warehouse -> red shipping hub    #############################
+        //traverseal (warehouse -> red shipping hub)
+        TrajectorySequence BackTraverse = drive.trajectorySequenceBuilder(start)
+                .back(startOffset)
+                .splineTo(new Vector2d(-16,-36-8),Math.toRadians(180))
                 .addTemporalMarker(()->{
-                    drive.followTrajectorySequence(PickToTop);
+                    drive.followTrajectorySequence(DropBall);
+                }).waitSeconds(2)
+                .build();
+
+//      ####################   red alliance shipping hub -> warehouse   ###########################
+        //traversal (red alliance shipping hub -> warehouse)
+        TrajectorySequence ForwardTraverse = drive.trajectorySequenceBuilder(shippingHub)
+//                .strafeRight(0.1)
+//                .splineToConstantHeading(new Vector2d(24-12,-66),Math.toRadians(0))
+//                .forward(startOffset+12)
+                .strafeRight(24)
+                .forward(40)
+                .forward(10) //8
+                .addTemporalMarker(()->{
+                    drive.followTrajectorySequence(pickBall);
                 })
                 .build();
 
+//        ##############################  code starts ##################################################
         drive.followTrajectorySequence(PickToTop);
 
         waitForStart();
+        runtime.reset();
 
         while(opModeIsActive())
         {
             drive.followTrajectorySequence(BackTraverse);
-            drive.followTrajectorySequence(DropBall);
             drive.followTrajectorySequence(ForwardTraverse);
-            drive.followTrajectorySequence(pickBall);
+            drive.followTrajectorySequence(PickToTop);
         }
+        if (isStopRequested())  return;
     }
 }

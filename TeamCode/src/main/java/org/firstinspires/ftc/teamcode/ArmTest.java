@@ -63,6 +63,7 @@ public class ArmTest extends LinearOpMode {
         extension = hardwareMap.get(DcMotorEx.class, "extension");
         extension.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         extension.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
         arm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         arm.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, DriveConstants.extensionpidcoeffs);
 

@@ -23,6 +23,8 @@ import java.util.concurrent.TimeUnit;
 @Config
 @TeleOp(name="Joystick Control", group="Linear Opmode")
 //@Disabled
+//  use this for joystick control
+
 public class JoystickControl extends LinearOpMode {
 
     // Declare OpMode members.
